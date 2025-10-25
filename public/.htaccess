@@ -1,0 +1,19 @@
+Options All -Indexes
+
+<Files .htaccess>
+  Order allow,deny
+  Deny from all
+</Files>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /product_manager/
+
+  # ✅ 静的ファイル（画像・CSS・JSなど）はSlimに渡さずApacheが処理
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # ✅ その他のリクエストは index.php にルーティング
+  RewriteRule ^ index.php [QSA,L]
+</IfModule>
