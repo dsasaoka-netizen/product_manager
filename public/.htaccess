@@ -1,12 +1,15 @@
-Options All -Indexes
+# 🔒 ディレクトリ一覧を無効化
+Options -Indexes
 
+# 🔒 .htaccess ファイル自体へのアクセスを拒否
 <Files .htaccess>
-  Order allow,deny
-  Deny from all
+  Require all denied
 </Files>
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # ✅ ベースパスを明示（URLが /product_manager/ で始まる）
   RewriteBase /product_manager/
 
   # ✅ 静的ファイル（画像・CSS・JSなど）はSlimに渡さずApacheが処理
@@ -17,3 +20,8 @@ Options All -Indexes
   # ✅ その他のリクエストは index.php にルーティング
   RewriteRule ^ index.php [QSA,L]
 </IfModule>
+
+# ✅ PHPファイル以外の直接アクセスを制限（任意強化）
+<FilesMatch "\.(env|json|lock|md|gitignore|log|ini)$">
+  Require all denied
+</FilesMatch>
