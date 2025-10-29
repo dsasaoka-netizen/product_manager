@@ -40,3 +40,76 @@ composer test
 ```
 
 That's it! Now go build something cool.
+
+
+# Product Manager System
+
+## 概要
+Rakuten出品者向けの商品管理システム。Slim Framework + MySQLで構築。
+
+## セットアップ手順（ローカル）
+1. `.env.example` をコピーして `.env` を作成
+2. `composer install` を実行
+3. `php -S localhost:8000 -t public` で起動
+4. `http://localhost:8000/login` にアクセス
+
+## 環境設定ファイル（.env）の作成方法
+
+本プロジェクトでは、データベース接続や環境設定を `.env` ファイルで管理しています。  
+セキュリティ上の理由から `.env` は Git 管理対象外となっており、代わりに `.env.example` をテンプレートとして提供しています。
+
+### 作成手順
+
+1. プロジェクトルートにある `.env.example` をコピーして `.env` を作成します  
+   Windowsの場合：copy .env.example .env
+
+
+2. `.env` ファイル内の各項目を自身の環境に合わせて編集します：
+
+```env
+DB_HOST=mysql80.yamashichi.sakura.ne.jp
+DB_NAME=yamashichi_product_manager
+DB_USER=your_db_user
+DB_PASS=your_db_password
+
+
+## 本番環境URL
+- ログイン画面: https://yamashichi.sakura.ne.jp/product_manager/login
+- 商品一覧: https://yamashichi.sakura.ne.jp/product_manager/products
+
+## 管理機能
+- サムネイル再生成: `/admin/regenerate-thumbnails`
+- ダッシュボード: `/admin/dashboard`
+
+## ディレクトリ構成
+- `/public` : Webルート
+- `/src` : コントローラー・モデル
+- `/templates` : Twigテンプレート
+- `/vendor` : Composer依存ライブラリ
+
+## 注意点
+- `.env` はGit管理しないこと（`.gitignore` に含める）
+- DB接続情報は `.env.example` にテンプレート化
+
+## 環境設定ファイル（.env）の作成方法
+
+本プロジェクトでは、データベース接続や環境設定を `.env` ファイルで管理しています。  
+セキュリティ上の理由から `.env` は Git 管理対象外となっており、代わりに `.env.example` をテンプレートとして提供しています。
+
+### 作成手順
+
+1. プロジェクトルートにある `.env.example` をコピーして `.env` を作成します  
+   Windowsの場合：copy .env.example .env
+
+
+2. `.env` ファイル内の各項目を自身の環境に合わせて編集します：
+
+```env
+DB_HOST=mysql80.yamashichi.sakura.ne.jp
+DB_NAME=yamashichi_product_manager
+DB_USER=your_db_user
+DB_PASS=your_db_password
+
+
+3.編集後、アプリケーションを再起動してください
+
