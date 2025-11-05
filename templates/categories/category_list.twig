@@ -1,0 +1,70 @@
+{% extends "layouts/admin_layout.twig" %}
+
+{% block title %}カテゴリ一覧{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2 class="mb-4">📂 カテゴリ一覧</h2>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-2 mb-3">
+      <a href="{{ basePath }}/categories/new" class="btn btn-success">＋ カテゴリを登録する</a>
+      <a href="{{ basePath }}/admin/dashboard" class="btn btn-outline-secondary">← ダッシュボードに戻る</a>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>カテゴリ名</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="sortable-category-list">
+          {% for cat in categories %}
+            <tr data-id="{{ cat.id }}">
+              <td style="padding-left: {{ 10 + (cat.depth * 20) }}px;">
+                {{ cat.depth > 0 ? '└ ' : '' }}{{ cat.name }}
+              </td>
+              <td>
+                <div class="d-flex flex-wrap gap-1">
+                  <a href="{{ basePath }}/categories/{{ cat.id }}/edit" class="btn btn-sm btn-outline-primary">編集</a>
+                  <form method="POST" action="{{ basePath }}/categories/{{ cat.id }}/delete" onsubmit="return confirm('このカテゴリを削除しますか？');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">削除</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const tbody = document.getElementById('sortable-category-list');
+      Sortable.create(tbody, {
+        animation: 150,
+        onEnd: function () {
+          const order = [];
+          tbody.querySelectorAll('tr').forEach((row, index) => {
+            order.push({ id: row.dataset.id, sort_order: index + 1 });
+          });
+
+          fetch('{{ basePath }}/categories/sort', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(order)
+          }).then(res => {
+            if (!res.ok) {
+              alert('並び順の保存に失敗しました');
+            } else {
+              location.reload();
+            }
+          });
+        }
+      });
+    });
+  </script>
+{% endblock %}

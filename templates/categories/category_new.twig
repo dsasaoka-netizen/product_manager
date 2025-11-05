@@ -1,0 +1,42 @@
+{% extends "layouts/admin_layout.twig" %}
+
+{% block title %}カテゴリ登録{% endblock %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h2>📂 カテゴリ登録</h2>
+
+    {% if error is defined and error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="{{ basePath }}/categories/create">
+      <div class="mb-3">
+        <label for="name" class="form-label">カテゴリ名</label>
+        <input type="text" name="name" id="name" class="form-control"
+               value="{{ name|default('') }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="parent_id" class="form-label">親カテゴリ（任意）</label>
+        <select name="parent_id" id="parent_id" class="form-select">
+          <option value="">なし（大分類）</option>
+          {% for cat in categories %}
+            {% set indent = '' %}
+            {% for i in 1..cat.depth %}
+              {% set indent = indent ~ '　' %}
+            {% endfor %}
+            {% set prefix = cat.depth > 0 ? '└ ' : '' %}
+            <option value="{{ cat.id }}"
+              {% if parentId|default('') == cat.id %}selected{% endif %}>
+              {{ indent ~ prefix ~ cat.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary">登録する</button>
+      <a href="{{ basePath }}/categories" class="btn btn-secondary ms-2">戻る</a>
+    </form>
+  </div>
+{% endblock %}

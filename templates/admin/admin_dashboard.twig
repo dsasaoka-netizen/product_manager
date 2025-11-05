@@ -1,0 +1,47 @@
+{% extends "layouts/admin_layout.twig" %}
+
+{% block title %}管理者ダッシュボード{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2 class="mb-4 fs-3">🛠️ 管理者ダッシュボード</h2>
+
+    <!-- 統計表示（レスポンシブカード） -->
+    <div class="row g-4">
+      <div class="col-12 col-md-6">
+        <div class="card border-info shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title text-info fs-5">未生成サムネイル画像</h5>
+            <p class="card-text fs-4"><strong>{{ missingThumbnailCount }}</strong> 件</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6">
+        <div class="card border-warning shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title text-warning fs-5">画像未登録の商品</h5>
+            <p class="card-text fs-4"><strong>{{ noImageProductCount }}</strong> 件</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 管理機能リンク（スマホ対応・拡大） -->
+    <div class="list-group mt-4">
+      <a href="{{ basePath }}/admin/users" class="list-group-item list-group-item-action py-3 fs-5">
+        👥 ユーザー管理
+      </a>
+      <a href="{{ basePath }}/categories" class="list-group-item list-group-item-action py-3 fs-5">
+        🗂️ カテゴリ管理
+      </a>
+      <a href="{{ basePath }}/admin/regenerate-thumbnails" class="list-group-item list-group-item-action py-3 fs-5">
+        🖼️ サムネイル再生成
+      </a>
+    </div>
+
+    <!-- 戻るボタン（中央・拡大） -->
+    <div class="mt-5 text-center">
+      <a href="{{ basePath }}/products" class="btn btn-lg btn-outline-secondary px-4 py-2">← 商品一覧に戻る</a>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,7 @@
+{# templates/_macros.twig #}
+
+{% macro canEdit(product, session) %}
+  {{ session.role == 'admin'
+     or session.can_manage_all_products
+     or product.user_id == session.user_id }}
+{% endmacro %}

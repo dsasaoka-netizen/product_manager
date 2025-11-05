@@ -1,0 +1,38 @@
+{% extends "layouts/admin_layout.twig" %}
+
+{% block title %}ユーザー登録{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2 class="mb-4">🆕 ユーザー登録</h2>
+
+    {% if error is defined and error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form action="{{ basePath }}/admin/users" method="post">
+      <div class="mb-3">
+        <label for="username" class="form-label">ユーザー名</label>
+        <input type="text" name="username" id="username" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">パスワード</label>
+        <input type="password" name="password" id="password" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="role" class="form-label">権限</label>
+        <select name="role" id="role" class="form-select" required>
+          <option value="user">一般ユーザー</option>
+          <option value="admin">管理者</option>
+        </select>
+      </div>
+
+      <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
+        <button type="submit" class="btn btn-primary">登録する</button>
+        <a href="{{ basePath }}/admin/users" class="btn btn-outline-secondary">戻る</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

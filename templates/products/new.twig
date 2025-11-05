@@ -1,0 +1,94 @@
+{% extends "layout.twig" %}
+
+{% block title %}商品登録{% endblock %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h2>📝 商品登録</h2>
+
+    {% if error is defined and error %}
+      <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="{{ basePath }}/products" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label for="code" class="form-label">商品コード（半角英数字）</label>
+        <input type="text" name="code" id="code" class="form-control"
+               value="{{ product.code|default('') }}"
+               required pattern="[A-Za-z0-9]+" maxlength="50" autocomplete="off">
+      </div>
+
+      <div class="mb-3">
+        <label for="category_id" class="form-label">カテゴリ</label>
+        <select name="category_id" id="category_id" class="form-select" required>
+          {% for cat in categories %}
+            {% set depth = cat.depth|default(0) %}
+            {% set indent = '' %}
+            {% for i in 1..depth %}
+              {% set indent = indent ~ '　' %}
+            {% endfor %}
+            {% set prefix = depth > 0 ? '└ ' : '' %}
+            <option value="{{ cat.id }}"
+              {% if product.category_id is defined and product.category_id == cat.id %}selected{% endif %}>
+              {{ indent ~ prefix ~ cat.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="name" class="form-label">商品名</label>
+        <input type="text" name="name" id="name" class="form-control"
+               value="{{ product.name|default('') }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="description" class="form-label">商品説明</label>
+        <textarea name="description" id="description" class="form-control" rows="4">{{ product.description|default('') }}</textarea>
+      </div>
+
+      <div class="mb-3">
+        <label for="price" class="form-label">価格</label>
+        <input type="number" name="price" id="price" class="form-control"
+               value="{{ product.price is defined and product.price is not empty ? product.price : '' }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="cost_price" class="form-label">仕入価格</label>
+        <input type="number" name="cost_price" id="cost_price" class="form-control"
+               value="{{ product.cost_price is defined and product.cost_price is not empty ? product.cost_price : '' }}"
+               min="0" step="1" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="stock" class="form-label">在庫数</label>
+        <input type="number" name="stock" id="stock" class="form-control"
+               value="{{ product.stock is defined and product.stock is not empty ? product.stock : '' }}" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="images" class="form-label">商品画像（最大10枚まで）</label>
+        <input type="file" name="new_images[]" id="images" class="form-control" multiple accept="image/*">
+        <div id="imageWarning" class="text-danger mt-2" style="display: none;">
+          ⚠️ 画像は最大10枚まで選択できます。
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary">登録する</button>
+      <a href="{{ basePath }}/products" class="btn btn-secondary ms-2">戻る</a>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('images').addEventListener('change', function () {
+      const maxImages = 10;
+      const warning = document.getElementById('imageWarning');
+      if (this.files.length > maxImages) {
+        warning.style.display = 'block';
+        this.value = '';
+      } else {
+        warning.style.display = 'none';
+      }
+    });
+  </script>
+{% endblock %}

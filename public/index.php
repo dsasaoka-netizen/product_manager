@@ -1,13 +1,17 @@
 <?php
 declare(strict_types=1);
+
+// ✅ エラー表示（開発用）
 ini_set('display_errors', '1');
 error_reporting(E_ALL);
 
-// echo 'PHP is working!';
-// exit;
+// ✅ セッション開始（30分保持）
+session_start([
+    'cookie_lifetime' => 0,        // ブラウザを閉じるとセッション終了
+    'gc_maxlifetime' => 1800       // サーバー側で30分保持（1800秒）
+]);
 
-session_start(); // ← 最初に呼ぶことで全ルートでセッションが有効になる
-
+use Dotenv\Dotenv;
 use App\Application\Handlers\HttpErrorHandler;
 use App\Application\Handlers\ShutdownHandler;
 use App\Application\ResponseEmitter\ResponseEmitter;
@@ -18,44 +22,36 @@ use Slim\Factory\ServerRequestCreatorFactory;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-// Instantiate PHP-DI ContainerBuilder
+// ✅ .env 読み込み
+$dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+$dotenv->load();
+
+// ✅ コンテナ構築
 $containerBuilder = new ContainerBuilder();
 
-if (false) { // Should be set to true in production
+if ($_ENV['APP_ENV'] === 'production') {
     $containerBuilder->enableCompilation(__DIR__ . '/../var/cache');
 }
 
-// Set up settings
-$settings = require __DIR__ . '/../app/settings.php';
-$settings($containerBuilder);
+// ✅ 設定・依存登録
+(require __DIR__ . '/../app/settings.php')($containerBuilder);
+(require __DIR__ . '/../app/dependencies.php')($containerBuilder);
+(require __DIR__ . '/../app/repositories.php')($containerBuilder);
 
-// Set up dependencies
-$dependencies = require __DIR__ . '/../app/dependencies.php';
-$dependencies($containerBuilder);
-
-// Set up repositories
-$repositories = require __DIR__ . '/../app/repositories.php';
-$repositories($containerBuilder);
-
-// Build PHP-DI Container instance
 $container = $containerBuilder->build();
 
-// Instantiate the app
+// ✅ Slim アプリ生成
 AppFactory::setContainer($container);
 $app = AppFactory::create();
 
-// ✅ Slimにベースパスを明示的に設定（URLが /product_manager/ で始まるため）
-$app->setBasePath('/product_manager');
+// ✅ ベースパス設定（例：/product_manager）
+$app->setBasePath($_ENV['BASE_PATH'] ?? '');
 
 $callableResolver = $app->getCallableResolver();
 
-// Register middleware
-$middleware = require __DIR__ . '/../app/middleware.php';
-$middleware($app);
-
-// Register routes
-$routes = require __DIR__ . '/../app/routes.php';
-$routes($app);
+// ✅ ミドルウェア・ルート登録
+(require __DIR__ . '/../app/middleware.php')($app);
+(require __DIR__ . '/../app/routes.php')($app);
 
 /** @var SettingsInterface $settings */
 $settings = $container->get(SettingsInterface::class);
@@ -64,29 +60,23 @@ $displayErrorDetails = $settings->get('displayErrorDetails');
 $logError = $settings->get('logError');
 $logErrorDetails = $settings->get('logErrorDetails');
 
-// Create Request object from globals
+// ✅ リクエスト生成
 $serverRequestCreator = ServerRequestCreatorFactory::create();
 $request = $serverRequestCreator->createServerRequestFromGlobals();
 
-// Create Error Handler
+// ✅ エラーハンドラ設定
 $responseFactory = $app->getResponseFactory();
 $errorHandler = new HttpErrorHandler($callableResolver, $responseFactory);
-
-// Create Shutdown Handler
 $shutdownHandler = new ShutdownHandler($request, $errorHandler, $displayErrorDetails);
 register_shutdown_function($shutdownHandler);
 
-// Add Routing Middleware
+// ✅ ミドルウェア追加
 $app->addRoutingMiddleware();
-
-// Add Body Parsing Middleware
 $app->addBodyParsingMiddleware();
-
-// Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware($displayErrorDetails, $logError, $logErrorDetails);
 $errorMiddleware->setDefaultErrorHandler($errorHandler);
 
-// Run App & Emit Response
+// ✅ 実行
 $response = $app->handle($request);
 $responseEmitter = new ResponseEmitter();
 $responseEmitter->emit($response);

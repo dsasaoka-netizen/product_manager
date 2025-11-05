@@ -1,0 +1,144 @@
+/* 共通フォームスタイル（ログイン画面などで使用） */
+form.form-narrow {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* 検索フォーム専用（幅を制限しない） */
+form.form-wide {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+/* ラベル共通 */
+label {
+  display: block;
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+/* 入力欄共通 */
+input,
+select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+/* 幅広ボタン（検索・リセットなど） */
+button.btn-wide,
+a.btn-wide {
+  margin-top: 15px;
+  padding: 10px;
+  width: 100%;
+  font-size: 16px;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+/* 検索ボタンの色（button専用） */
+button.btn-wide {
+  background-color: #007bff;
+  color: white;
+  border: none;
+}
+
+/* 小型ボタン（編集・削除など） */
+button.btn-compact,
+a.btn-compact {
+  padding: 4px 8px;
+  font-size: 14px;
+  width: auto;
+  line-height: 1.2;
+  border-radius: 4px;
+}
+
+/* サムネイル画像の表示調整 */
+.thumbnail {
+  height: auto !important;
+  display: block;
+}
+
+/* メイン画像用のやや大きめスタイル */
+.main-thumbnail {
+  max-width: 200px;
+  width: 100%;
+  height: auto;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* スマホ表示時のフォームボタン間隔調整 */
+@media screen and (max-width: 767.98px) {
+  .form-label {
+    font-size: 15px;
+  }
+
+  .btn {
+    font-size: 15px;
+  }
+}
+/* PC表示（md以上）ではサムネイルを小さく */
+@media screen and (min-width: 768px) {
+  .thumbnail {
+    max-width: 80px !important;
+    width: auto !important;
+  }
+}
+
+/* スマホ表示（md未満）では幅いっぱいに表示 */
+@media screen and (max-width: 767.98px) {
+  .thumbnail {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+/* 並び替え対象の画像ブロックにドラッグ可能な見た目を付与 */
+#sortable-images > div[data-id] {
+  cursor: move;
+  user-select: none;
+}
+
+/* レスポンシブ対応（フォーム・ボタン・見出し） */
+@media screen and (max-width: 600px) {
+  form.form-narrow {
+    padding: 10px;
+  }
+
+  label,
+  input,
+  select,
+  button {
+    font-size: 14px;
+  }
+
+  button.btn-compact,
+  a.btn-compact {
+    font-size: 13px;
+    padding: 3px 6px;
+  }
+
+  button.btn-wide,
+  a.btn-wide {
+    font-size: 15px;
+    padding: 8px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  @media screen and (max-width: 600px) {
+    h2 {
+      font-size: 1.3rem;
+    }
+  }
+}

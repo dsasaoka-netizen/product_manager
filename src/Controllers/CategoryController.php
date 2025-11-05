@@ -2,60 +2,66 @@
 
 namespace App\Controllers;
 
+use App\Helpers\AuthHelper;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Routing\RouteContext;
+use Slim\Views\Twig;
 
 class CategoryController {
   protected \PDO $pdo;
+  protected Twig $view;
 
-  public function __construct(\PDO $pdo) {
+  public function __construct(\PDO $pdo, Twig $view) {
     $this->pdo = $pdo;
+    $this->view = $view;
   }
 
-  // 🆕 カテゴリ登録画面表示（階層付きプルダウン対応）
+  // 🔐 共通セッションチェック（管理者専用）
+  private function checkAdmin(Response $response): ?Response {
+    if (!AuthHelper::requireLogin() || !AuthHelper::checkTimeout()) {
+      AuthHelper::forceLogout();
+      return $response->withHeader('Location', '/login')->withStatus(302);
+    }
+    AuthHelper::updateActivity();
+    if ($_SESSION['role'] !== 'admin') {
+      $response->getBody()->write('管理者のみアクセス可能です');
+      return $response->withStatus(403);
+    }
+    return null;
+  }
+
+  // 🆕 カテゴリ登録画面表示
   public function showCategoryForm(Request $request, Response $response): Response {
-    if (session_status() === PHP_SESSION_NONE) {
-      session_start();
-    }
+    if ($redirect = $this->checkAdmin($response)) return $redirect;
+
     $categories = $this->getSortedCategoryTree();
+    $basePath = RouteContext::fromRequest($request)->getBasePath();
 
-    ob_start();
-    include dirname(__DIR__, 2) . '/templates/categories/new.php';
-    $html = ob_get_clean();
-
-    $response->getBody()->write($html);
-    return $response;
+    return $this->view->render($response, 'categories/category_new.twig', [
+      'categories' => $categories,
+      'basePath' => $basePath,
+      'session' => $_SESSION
+    ]);
   }
 
-  // 🗂️ カテゴリ一覧表示（階層構造＋並び順）
+  // 🗂️ カテゴリ一覧表示
   public function showCategoryList(Request $request, Response $response): Response {
-    if (session_status() === PHP_SESSION_NONE) {
-      session_start();
-    }
+    if ($redirect = $this->checkAdmin($response)) return $redirect;
+
     $categories = $this->getSortedCategoryTree();
+    $basePath = RouteContext::fromRequest($request)->getBasePath();
 
-    ob_start();
-    include dirname(__DIR__, 2) . '/templates/categories/list.php';
-    $html = ob_get_clean();
-
-    $response->getBody()->write($html);
-    return $response;
+    return $this->view->render($response, 'categories/category_list.twig', [
+      'categories' => $categories,
+      'basePath' => $basePath,
+      'session' => $_SESSION
+    ]);
   }
 
   // 🆕 カテゴリ登録処理
   public function createCategory(Request $request, Response $response): Response {
-
-
-    if (session_status() === PHP_SESSION_NONE) {
-      session_start();
-    }
-
-
-    // if ($_SESSION['role'] ?? null !== 'admin') {
-    if ($_SESSION['role'] !== 'admin') {
-      $response->getBody()->write('カテゴリ登録は管理者のみ可能です');
-      return $response->withStatus(403);
-    }
+    if ($redirect = $this->checkAdmin($response)) return $redirect;
 
     $data = $request->getParsedBody();
     $name = trim($data['name'] ?? '');
@@ -63,15 +69,15 @@ class CategoryController {
     $sortOrder = (int)($data['sort_order'] ?? 0);
 
     if ($name === '') {
-      $error = 'カテゴリ名を入力してください';
       $categories = $this->getSortedCategoryTree();
+      $basePath = RouteContext::fromRequest($request)->getBasePath();
 
-      ob_start();
-      include dirname(__DIR__, 2) . '/templates/categories/new.php';
-      $html = ob_get_clean();
-
-      $response->getBody()->write($html);
-      return $response;
+      return $this->view->render($response, 'categories/category_new.twig', [
+        'categories' => $categories,
+        'basePath' => $basePath,
+        'session' => $_SESSION,
+        'error' => 'カテゴリ名を入力してください'
+      ]);
     }
 
     $stmt = $this->pdo->prepare("INSERT INTO categories (name, parent_id, sort_order) VALUES (?, ?, ?)");
@@ -80,11 +86,10 @@ class CategoryController {
     return $response->withHeader('Location', '/product_manager/categories')->withStatus(302);
   }
 
-  // ✏️ カテゴリ編集画面表示（階層付きプルダウン対応）
+  // ✏️ カテゴリ編集画面表示
   public function showCategoryEditForm(Request $request, Response $response, array $args): Response {
-    if (session_status() === PHP_SESSION_NONE) {
-      session_start();
-    }
+    if ($redirect = $this->checkAdmin($response)) return $redirect;
+
     $id = (int)$args['id'];
 
     $stmt = $this->pdo->prepare("SELECT * FROM categories WHERE id = ?");
@@ -100,22 +105,21 @@ class CategoryController {
     $stmt->execute([$id]);
     $flat = $stmt->fetchAll();
     $categories = $this->buildCategoryTree($flat);
+    $basePath = RouteContext::fromRequest($request)->getBasePath();
 
-    ob_start();
-    include dirname(__DIR__, 2) . '/templates/categories/edit.php';
-    $html = ob_get_clean();
-
-    $response->getBody()->write($html);
-    return $response;
+    return $this->view->render($response, 'categories/category_edit.twig', [
+      'category' => $category,
+      'categories' => $categories,
+      'basePath' => $basePath,
+      'session' => $_SESSION
+    ]);
   }
 
   // 🔄 カテゴリ更新処理
   public function updateCategory(Request $request, Response $response, array $args): Response {
-    if (session_status() === PHP_SESSION_NONE) {
-      session_start();
-    }
-    $id = (int)$args['id'];
+    if ($redirect = $this->checkAdmin($response)) return $redirect;
 
+    $id = (int)$args['id'];
     $data = $request->getParsedBody();
     $name = trim($data['name'] ?? '');
     $parentId = $data['parent_id'] !== '' ? (int)$data['parent_id'] : null;
@@ -132,11 +136,10 @@ class CategoryController {
     return $response->withHeader('Location', '/product_manager/categories')->withStatus(302);
   }
 
-  // 🗑️ カテゴリ削除処理（子カテゴリがある場合は拒否）
+  // 🗑️ カテゴリ削除処理
   public function deleteCategory(Request $request, Response $response, array $args): Response {
-    if (session_status() === PHP_SESSION_NONE) {
-      session_start();
-    }
+    if ($redirect = $this->checkAdmin($response)) return $redirect;
+
     $id = (int)$args['id'];
 
     $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM categories WHERE parent_id = ?");
@@ -152,15 +155,9 @@ class CategoryController {
     return $response->withHeader('Location', '/product_manager/categories')->withStatus(302);
   }
 
-  // ↕️ 並び順更新（ドラッグ＆ドロップ対応）
+  // ↕️ 並び順更新
   public function updateSortOrder(Request $request, Response $response): Response {
-    if (session_status() === PHP_SESSION_NONE) {
-      session_start();
-    }
-    if ($_SESSION['role'] !== 'admin') {
-      $response->getBody()->write('権限がありません');
-      return $response->withStatus(403);
-    }
+    if ($redirect = $this->checkAdmin($response)) return $redirect;
 
     $data = json_decode($request->getBody()->getContents(), true);
     foreach ($data as $item) {
@@ -171,7 +168,7 @@ class CategoryController {
     return $response->withStatus(200);
   }
 
-  // 🧩 階層構造を構築する再帰関数（親→子→孫）
+  // 🧩 階層構造を構築する再帰関数
   private function buildCategoryTree(array $categories, $parentId = null, $depth = 0): array {
     $tree = [];
     foreach ($categories as $cat) {
@@ -185,7 +182,7 @@ class CategoryController {
     return $tree;
   }
 
-  // 🧩 並び順付きカテゴリツリー取得（一覧・登録画面用）
+  // 🧩 並び順付きカテゴリツリー取得
   private function getSortedCategoryTree(): array {
     $stmt = $this->pdo->query("SELECT * FROM categories ORDER BY sort_order ASC, name ASC");
     $flat = $stmt->fetchAll();

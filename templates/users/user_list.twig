@@ -1,0 +1,50 @@
+{% extends "layouts/admin_layout.twig" %}
+
+{% block title %}ユーザー一覧{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2 class="mb-4">👥 ユーザー一覧</h2>
+
+    <div class="d-flex flex-column flex-md-row justify-content-between mb-3 gap-2">
+      <a href="{{ basePath }}/admin/dashboard" class="btn btn-outline-secondary">← ダッシュボードに戻る</a>
+      <a href="{{ basePath }}/admin/users/new" class="btn btn-primary">＋ ユーザーを登録する</a>
+    </div>
+
+    {% if users is empty %}
+      <p class="text-muted">ユーザーが登録されていません。</p>
+    {% else %}
+      <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>ユーザー名</th>
+              <th>権限</th>
+              <th>登録日時</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in users %}
+              <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.role }}</td>
+                <td>{{ user.created_at }}</td>
+                <td>
+                  <div class="d-flex flex-wrap gap-1">
+                    <a href="{{ basePath }}/admin/users/{{ user.id }}/edit" class="btn btn-sm btn-warning">編集</a>
+                    <form action="{{ basePath }}/admin/users/{{ user.id }}/delete" method="post" onsubmit="return confirm('削除してもよろしいですか？');">
+                      <button type="submit" class="btn btn-sm btn-danger">削除</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

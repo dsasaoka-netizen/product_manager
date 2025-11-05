@@ -6,30 +6,29 @@ use App\Application\Settings\Settings;
 use App\Application\Settings\SettingsInterface;
 use DI\ContainerBuilder;
 use Monolog\Logger;
-use Dotenv\Dotenv;
 
 return function (ContainerBuilder $containerBuilder) {
 
-    // ✅ .env を読み込む（初回のみ）
-    if (file_exists(__DIR__ . '/../.env')) {
-        $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
-        $dotenv->load();
-    }
+    // ✅ APP_ENV によるエラーレベル切り替え
+    $isProduction = ($_ENV['APP_ENV'] ?? 'local') === 'production';
+    $isDebug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
 
-    // Global Settings Object
     $containerBuilder->addDefinitions([
-        SettingsInterface::class => function () {
+        SettingsInterface::class => function () use ($isProduction, $isDebug) {
             return new Settings([
-                'displayErrorDetails' => true, // Should be set to false in production
-                'logError'            => false,
-                'logErrorDetails'     => false,
+                // ✅ 本番環境ではエラー詳細を非表示
+                'displayErrorDetails' => !$isProduction,
+                'logError'            => $isDebug,
+                'logErrorDetails'     => $isDebug,
+
+                // ✅ ロガー設定
                 'logger' => [
-                    'name' => 'slim-app',
-                    'path' => isset($_ENV['docker']) ? 'php://stdout' : __DIR__ . '/../logs/app.log',
-                    'level' => Logger::DEBUG,
+                    'name'  => 'product-manager',
+                    'path'  => isset($_ENV['docker']) ? 'php://stdout' : __DIR__ . '/../logs/app.log',
+                    'level' => $isDebug ? Logger::DEBUG : Logger::ERROR,
                 ],
 
-                // ✅ DB接続情報を .env から取得
+                // ✅ DB接続情報
                 'db' => [
                     'host'    => $_ENV['DB_HOST'] ?? '127.0.0.1',
                     'dbname'  => $_ENV['DB_NAME'] ?? 'product_manager',
@@ -37,6 +36,9 @@ return function (ContainerBuilder $containerBuilder) {
                     'pass'    => $_ENV['DB_PASS'] ?? '',
                     'charset' => $_ENV['DB_CHARSET'] ?? 'utf8mb4',
                 ],
+
+                // ✅ ベースパス（Twigやリダイレクトで使用可能）
+                'basePath' => $_ENV['BASE_PATH'] ?? '',
             ]);
         }
     ]);
